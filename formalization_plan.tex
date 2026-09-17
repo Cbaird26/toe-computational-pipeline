@@ -1,0 +1,79 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\title{A Formalization Plan: Machine-Checkable Verification of the Schwarzschild Solution\\[4pt]
+\large Stage 5 pilot of the Computational Attack Program on Fundamental Unification}
+\author{Kimi Work research scaffold}
+\date{2026-09-16}
+
+\begin{document}
+\maketitle
+
+\section{Why this target}
+A theory-of-everything program lives or dies on whether its claims can be \emph{checked},
+not asserted. Before formalizing anything exotic, the pipeline must demonstrate it can
+formalize something \emph{known}. The Schwarzschild verification is the ideal pilot:
+it is a finite computation, its correctness is undisputed, and every step is
+mechanizable.
+
+\begin{quote}
+\textbf{Claim to be formalized.} The metric
+\[
+  ds^2 = -\left(1-\frac{2GM}{r}\right)dt^2
+        + \left(1-\frac{2GM}{r}\right)^{-1}dr^2
+        + r^2\left(d\theta^2 + \sin^2\theta\,d\phi^2\right)
+\]
+satisfies the vacuum Einstein equations $R_{\mu\nu} = 0$ for $r > 2GM$.
+\end{quote}
+
+\section{Formalization ladder}
+\begin{enumerate}
+  \item \textbf{Level 0 --- symbolic check (sympy).} Compute Christoffel symbols
+        $\Gamma^{\rho}_{\mu\nu}$, the Ricci tensor $R_{\mu\nu}$, and verify
+        $R_{\mu\nu} \equiv 0$ componentwise. Fully automatable today.
+  \item \textbf{Level 1 --- scripted differential geometry.} Re-derive the same result
+        from an index-free formulation (orthonormal coframe, Cartan structure equations
+        $d\theta^a + \omega^a{}_b \wedge \theta^b = 0$, curvature 2-forms
+        $\Omega^a{}_b = d\omega^a{}_b + \omega^a{}_c \wedge \omega^c{}_b$).
+  \item \textbf{Level 2 --- proof assistant (Lean 4 + Mathlib).} Formalize the claim
+        against Mathlib's manifold and Riemannian geometry infrastructure. The theorem
+        statement must define the metric, the Ricci tensor, and the domain
+        $r > 2GM$ --- the proof itself is then a computation the kernel can check.
+\end{enumerate}
+Each level must reproduce the result of the level below it; a disagreement at any
+level halts the pipeline and is itself a reportable finding.
+
+\section{Deliverables and acceptance criteria}
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Deliverable & Form & Acceptance criterion \\
+\midrule
+D1: symbolic verification & Python script & $R_{\mu\nu}=0$ verified symbolically, all 10 components \\
+D2: Cartan re-derivation & LaTeX note & compiles; every step annotated \\
+D3: Lean formalization & Lean 4 project & \texttt{lake build} succeeds, zero \texttt{sorry} \\
+D4: public artifact & GitHub repo & third party can rerun D1--D3 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Why this matters for the larger program}
+Recent agentic formalization work --- e.g. \emph{Hilbert} (ICLR 2026), the
+\emph{Ax-prover} framework for mathematics and quantum physics (2026), and
+\emph{FormaTheoria}'s progress toward the classification of finite simple groups ---
+shows that theory-scale Lean formalization is now feasible. If this pilot succeeds,
+the same ladder is applied to the program's real targets: the Einstein--Hilbert
+functional-RL truncation used in asymptotic safety, and the Benincasa--Dowker curvature
+operator on causal sets. If the pilot fails, the failure localizes exactly which
+mathematical infrastructure is missing --- also a useful, publishable negative result.
+
+\section{Kill criteria}
+The pilot is abandoned if: (a) Level 0 and Level 1 disagree; (b) Level 2 requires
+axioms beyond standard Mathlib without justification; or (c) no component of the
+verification completes within the allotted effort --- in which case the bottleneck,
+not the theorem, becomes the object of study.
+
+\end{document}
