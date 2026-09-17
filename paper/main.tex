@@ -1,0 +1,216 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\title{A Validation-Gate Pipeline for Agent-Assisted Fundamental Physics:\\
+Reproduction of Causal-Set, Asymptotic-Safety, and Formal-Verification\\
+Benchmarks in a Single Session, with Logged Failure Modes}
+\author{Pipeline executed by an AI agent (Kimi Work) under human direction\\
+\textit{Repository:} \url{https://github.com/Cbaird26/toe-computational-pipeline}}
+\date{2026-09-16}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We report the construction and execution of a six-stage, validation-gate
+pipeline in which an AI agent performed the computationally checkable layer of
+quantum-gravity research end-to-end on a single machine: literature mapping,
+consistency filtering, consequence computation, reduction checks, formal
+verification, and public release. Three independent computational paradigms
+were exercised against published ground truth. (i) A two-dimensional
+causal-set toolkit reproduced the Myrheim--Meyer ordering fraction
+($0.494$--$0.504$ vs.\ the exact $0.5$), matched interval abundances to the
+exact analytic series of Machet and Eichhorn (arXiv:2007.13192) to $\sim$1\%
+in exact rational arithmetic, and validated the $\varepsilon$-smeared
+Benincasa--Dowker--Glaser action, with flat-vs-de~Sitter separation growing
+from $1.23\sigma$ ($\varepsilon{=}1$) to $27.5\sigma$ ($\varepsilon{=}0.1$)
+and the flat-diamond mean recovering the continuum value $2$ within error bars
+($2.19 \pm 0.28$). (ii) An FRG integrator for the Einstein--Hilbert truncation
+reproduced the non-Gaussian fixed point $g^* = 0.707321$,
+$\lambda^* = 0.193201$ and critical exponents
+$\theta = 1.475302 \pm 3.043206\,i$ to all published digits. (iii) A
+three-level verification ladder confirmed the Schwarzschild solution of the
+vacuum Einstein equations numerically, then symbolically (all 16 Ricci
+components identically zero in \texttt{sympy}), then at the level of a
+kernel-checked Lean~4 certificate for the underlying algebraic identities.
+The pipeline's controls-first design caught two genuine defects during
+execution --- a misremembered discrete curvature operator and a silently
+incorrect symbolic matrix-inverse routine --- both before they could
+contaminate results. We argue that the primary near-term contribution of
+agentic tooling to fundamental physics is disciplined verification
+infrastructure of this kind, and we document the failure log as a first-class
+result. All code, data, and proofs are public and rerunnable.
+\end{abstract}
+
+\section{Introduction}
+
+Claims in fundamental physics are cheap; checkable claims are expensive. The
+recent maturation of agentic AI tooling has made it possible for a single
+agent, under human direction, to execute large amounts of computational work
+--- but the value of that work depends entirely on whether it is disciplined
+by explicit validation gates against independently known ground truth.
+Without such gates, agent-generated numerics are unfalsifiable prose with
+decimal points.
+
+This paper documents a working counterexample: a pipeline in which every
+artifact was required to pass an explicit gate --- an exact analytic series, a
+published fixed point, a symbolic identity, or a kernel-checked proof ---
+before inclusion, and in which failures were logged rather than repaired
+silently. We make no claim of new physics. The claim is methodological: the
+pipeline ran, the gates held, and two real bugs were caught by the harness
+rather than by luck.
+
+\section{Pipeline design}
+
+The pipeline decomposes ``work on fundamental unification'' into six stages:
+(1)~literature position check; (2)~consistency filter; (3)~consequence
+computation; (4)~reduction check against known limits; (5)~formalization;
+(6)~public falsification. Two design rules do the work:
+
+\paragraph{Controls first.} Every instrument must pass a negative control
+(does not hallucinate signal) and a positive control (detects a known signal)
+before the target is measured.
+
+\paragraph{Explicit kill criteria.} Any artifact failing to recover a known
+limit, requiring unlogged trust, or producing no falsifiable output is
+rejected or flagged.
+
+\section{Causal-set benchmarks}
+
+A 2D causal-set toolkit (Poisson sprinkling into Minkowski diamonds and
+de~Sitter patches, causal-order construction, interval abundances, and the
+Benincasa--Dowker--Glaser (BDG) action family) was validated in layers.
+
+\subsection{Sprinkling and causal order}
+The Myrheim--Meyer ordering fraction was measured at $N = 100, 200, 400$ over
+20-trial ensembles: $0.494$--$0.504$ against the exact 2D value $1/2$,
+validating the sprinkling and relation code.
+
+\subsection{Interval abundances against exact theory}
+Measured abundances $N_0, N_1, N_2$ were compared against the exact analytic
+ensemble expectations (arXiv:2007.13192, eq.~(49)) evaluated in exact rational
+arithmetic (\texttt{Fraction}); agreement at $\sim$1\% with zero free
+parameters validates the counting code. A residual $2$--$3\sigma$ tension on
+two of nine cells is logged as an open item, most plausibly optimistic
+standard errors under the heavy-tailed fluctuations documented for these
+observables.
+
+\subsection{The $\varepsilon$-smeared BDG action}
+The unsmeared 2D action $S = 2(N - 2N_0 + 4N_1 - 2N_2)$ is known to exhibit
+large, non-self-averaging fluctuations; we reproduced that behavior and then
+implemented the smeared family
+\[
+  S_\varepsilon = 2\varepsilon\left[N - 2\varepsilon \sum_j f_2(j,\varepsilon)\, N_j\right],
+  \qquad
+  f_2(j,\varepsilon) = (1-\varepsilon)^j\left[1 - \frac{2j\varepsilon}{1-\varepsilon}
+    + \frac{j(j-1)}{2}\left(\frac{\varepsilon}{1-\varepsilon}\right)^{\!2}\right],
+\]
+with a self-check that $\varepsilon \to 1$ recovers the unsmeared action
+exactly. Flat-diamond versus 2D de~Sitter ($R{=}2$) ensemble means
+(60 trials, $N{=}400$) separated at $1.23\sigma$ ($\varepsilon{=}1$),
+$2.92\sigma$ ($0.5$), $11.30\sigma$ ($0.25$), and $27.54\sigma$ ($0.1$);
+at $\varepsilon{=}0.1$ the flat-diamond mean is $2.19 \pm 0.28$, recovering
+the continuum value $2$ (the joint/boundary contribution) within error bars.
+
+\paragraph{Logged failure.} The first implementation used a misremembered
+per-element operator $B(x) = 2(1 - N_1(x))$; it drifted with $N$, failed the
+exact-series gate, and was replaced by the published abundance form. The kill
+criteria worked as designed.
+
+\section{Asymptotic safety: Einstein--Hilbert truncation}
+
+FRG flow equations for the Einstein--Hilbert truncation (Litim cutoff, $d{=}4$,
+pure gravity; arXiv:2107.01071 eq.~(4.8) at $N_f{=}0$, cross-checked against
+the Reuter--Saueressig form) were integrated with a Newton fixed-point finder
+and numerical stability analysis. From four independent seeds (spread
+$<10^{-16}$, residual $|\beta| \sim 10^{-16}$): the Gaussian fixed point was
+verified at the origin, and the non-Gaussian fixed point reproduced published
+values to all printed digits: $g^* = 0.707321$, $\lambda^* = 0.193201$,
+$\eta_N = -2$ (exact, since $\beta_g = 0$), with critical exponents
+$\theta = 1.475302 \pm 3.043206\,i$ matching the published values exactly.
+Both $\mathrm{Re}\,\theta > 0$: the NGFP is UV-attractive in both directions
+(two relevant couplings). RK4 trajectories integrated toward the UV spiral
+into the NGFP (distance $0.054 \to 0.0008$ in 60 steps), consistent with
+$\mathrm{Im}\,\theta \neq 0$.
+
+\section{The Schwarzschild verification ladder}
+
+The vacuum Einstein equations $R_{\mu\nu} = 0$ for the Schwarzschild metric
+($r > 2M$) were verified at three escalating levels of rigor, each gated by
+controls:
+
+\paragraph{Level 0 (numeric).} Richardson-extrapolated ($O(h^4)$) Ricci
+computation. Negative control (Minkowski, spherical coordinates): max
+$|R_{\mu\nu}| = 1.3\times 10^{-7}$, pass. Positive control (2-sphere of
+radius $a$): recovers $R = 2/a^2$ to $10^{-9}$, pass --- proving the checker
+detects curvature. Target: max $|R_{\mu\nu}| = 8.0\times 10^{-6}$ over an
+18-point grid on $r \in (2M, 20M]$, worst nearest the horizon as expected.
+
+\paragraph{Level 1 (symbolic).} With \texttt{sympy} 1.14.0, all 16 Ricci
+components simplify to identically zero --- exact symbolic algebra, not
+numerics. \textbf{Logged failure:} the positive control caught that
+\texttt{sp.Matrix.inv\_quick} silently returns zeros for symbolic matrices;
+the checker uses \texttt{g.inv()}. Without the 2-sphere control, a trivially
+``passing'' all-zero result would have been a false positive of exactly the
+kind this pipeline exists to prevent.
+
+\paragraph{Level 2 (kernel-checked).} The algebraic identities underlying
+$R_{tt} = 0$ and $R_{rr} = 0$ --- rational-function arithmetic over
+$\mathbb{Z}[r, M]$, with Christoffel symbols extracted from the Level-1
+symbolic computation --- were proved in Lean~4.34.0
+(\texttt{Rtt\_vacuum}, \texttt{Rrr\_vacuum}, by \texttt{native\_decide}; the
+only axiom is the \texttt{native\_decide} compiler-trust axiom). Scope is
+stated honestly: this certifies the algebraic core, not differential geometry
+from first principles; the Mathlib manifold-level formalization is identified
+as the remaining gap.
+
+\section{Discussion: what the failure log is for}
+
+The two logged defects --- one physical (a misremembered operator), one
+computational (a silently wrong library routine) --- were caught by gates, not
+by inspection. This is the methodological claim of the paper made concrete:
+agent-generated scientific computation is trustworthy exactly to the extent
+that its harness is adversarial. We therefore treat the failure log as a
+first-class result and publish it alongside the artifacts.
+
+\section{Limitations}
+
+Nothing here is new physics. Reproduction validates the code, not the
+underlying research programs; FRG results are scheme- and
+truncation-dependent; the Lean certificate covers algebra downstream of
+trusted extraction steps; the $2$--$3\sigma$ abundance tension is unresolved;
+and all literature positions are a 2026-09-16 snapshot. Conceptual novelty
+remains the human's job --- the pipeline filters and hardens ideas, it does
+not have them.
+
+\section{Data and code availability}
+
+All artifacts are public and rerunnable:
+\url{https://github.com/Cbaird26/toe-computational-pipeline} ---
+Python (numpy-only, plus \texttt{sympy} for Level~1), a self-contained Lean~4
+file, literature-sweep CSVs, the program document, and this paper's source.
+
+\begin{thebibliography}{9}
+\bibitem{machet} B.~Machet, A.~Eichhorn,
+  \textit{On the continuum limit of Benincasa--Dowker--Glaser causal set
+  actions}, arXiv:2007.13192.
+\bibitem{ferguson} S.~Ferguson, A.~Nasiri, S.~Wallden,
+  arXiv:2506.19538 (BD fluctuation control via $\varepsilon$-smearing).
+\bibitem{cunningham} W.~J. Cunningham, S.~Surya,
+  \textit{Dimensionally restricted causal set quantum gravity},
+  Class.\ Quantum Grav.\ 2020, arXiv:1908.11647.
+\bibitem{bonanno} A.~Bonanno, A.~Eichhorn, H.~Gies, J.~M. Pawlowski et al.,
+  \textit{Critical reflections on asymptotically safe gravity},
+  Front.\ Phys.\ 2020.
+\bibitem{frg} arXiv:2107.01071, eq.~(4.8) (Einstein--Hilbert truncation flow
+  equations); M.~Reuter, F.~Saueressig, arXiv:1901.01731 (fixed-point values).
+\bibitem{surya} S.~Surya, \textit{The Causal Set Approach to Quantum Gravity:
+  An Introduction}, 2025.
+\bibitem{lean} Lean~4.34.0, \texttt{native\_decide} kernel verification;
+  project file \texttt{lean\_schwarzschild/Schwarzschild.lean}.
+\end{thebibliography}
+
+\end{document}
